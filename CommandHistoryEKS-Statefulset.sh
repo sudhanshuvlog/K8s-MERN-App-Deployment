@@ -39,6 +39,31 @@ eksctl create nodegroup --cluster=EKS-1 \
                        --appmesh-access \
                        --alb-ingress-access
 
+Create an IAM Policy with the below access
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ec2:AttachVolume",
+                "ec2:CreateSnapshot",
+                "ec2:CreateTags",
+                "ec2:CreateVolume",
+                "ec2:DeleteSnapshot",
+                "ec2:DeleteTags",
+                "ec2:DeleteVolume",
+                "ec2:DescribeInstances",
+                "ec2:DescribeSnapshots",
+                "ec2:DescribeTags",
+                "ec2:DescribeVolumes",
+                "ec2:DetachVolume"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+
 kubectl -n kube-system describe configmap aws-auth
 go to the role and attach the policy
 
