@@ -15,7 +15,6 @@ spec:
         app: webapp
     spec:
       containers:
-
       - name: webapp
         image: mongo-express
         ports:
@@ -26,16 +25,13 @@ spec:
             secretKeyRef:
               name: mongo-secret
               key: mongo-user
-
-
         - name: ME_CONFIG_MONGODB_ADMINPASSWORD
           valueFrom:
             secretKeyRef:
               name: mongo-secret
               key: mongo-password
-
         - name: ME_CONFIG_MONGODB_SERVER
-          valueFrom:
-            configMapKeyRef:
-              name: mongo-config
-              key: mongo-url 
+          value: "mongo-headless-service"  # Corrected here
+        - name: ME_CONFIG_MONGODB_PORT
+          value: "27017"  # Ensure the port is specified
+
