@@ -1,0 +1,10 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: ebs-storage-class
+provisioner: ebs.csi.aws.com # Provisioner for AWS EBS CSI
+parameters:
+  type: gp2                # Type of EBS volume
+  fsType: ext4             # File system type
+reclaimPolicy: Retain       # Retain the PV after the pod is deleted
+volumeBindingMode: WaitForFirstConsumer

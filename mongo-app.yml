@@ -1,13 +1,14 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
-  name: mongo-deployment
+  name: mongo-statefulset
   labels:
     app: mongo
     env: prod
     company: gfg
     author: sudhanshu
 spec:
+  serviceName: "mongo"
   replicas: 1
   selector:
     matchLabels:
@@ -23,10 +24,9 @@ spec:
         image: mongo:5.0
         ports:
         - containerPort: 27017
-        
         volumeMounts:
         - mountPath: /data/db
-          name: mongo-volume
+          name: mongo-persistent-storage
         env:
           - name: MONGO_INITDB_ROOT_USERNAME
             valueFrom:
@@ -38,12 +38,20 @@ spec:
               secretKeyRef:
                 name: mongo-secret
                 key: mongo-password
-      volumes:
-      - name: mongo-volume
-        persistentVolumeClaim:
-           claimName: mongo-pvc
+        resources:
+          requests:
+            memory: "3Gi"
+            cpu: "1"
+          limits:
+            memory: "4Gi"
+            cpu: "2"
+  volumeClaimTemplates:
+  - metadata:
+      name: mongo-persistent-storage
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "ebs-storage-class"
+      resources:
+        requests:
+          storage: 10Gi
 
-        # volumes:
-        #- name: mongo-volume
-        #  hostPath:
-        #    path: /data
