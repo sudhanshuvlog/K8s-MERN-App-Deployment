@@ -5,7 +5,7 @@ metadata:
 spec:
   selector:
     app: mongo
-  clusterIP: None # Makes it a headless service
+  clusterIP: None # headless service
   ports:
     - protocol: TCP
       port: 27017

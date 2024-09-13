@@ -31,7 +31,9 @@ spec:
               name: mongo-secret
               key: mongo-password
         - name: ME_CONFIG_MONGODB_SERVER
-          value: "mongo-headless-service"  # Corrected here
+          valueFrom: 
+            configMapKeyRef:
+              name: mongo-config
+              key: mongo-url 
         - name: ME_CONFIG_MONGODB_PORT
-          value: "27017"  # Ensure the port is specified
-
+          value: "27017"  
