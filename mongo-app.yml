@@ -35,14 +35,29 @@ spec:
             - name: mongo-persistent-storage
               mountPath: /data/db
   volumeClaimTemplates:
-  - metadata:
-      name: mongo-persistent-storage
-    spec:
-      accessModes: ["ReadWriteOnce"]
-      storageClassName: "ebs-storage-class"
-      resources:
-        requests:
-          storage: 1Gi
+    - metadata:
+        name: mongo-persistent-storage
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: "ebs-storage-class"
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo
+  labels:
+    app: mongo
+spec:
+  clusterIP: None # Headless service for StatefulSet
+  selector:
+    app: mongo
+  ports:
+    - protocol: TCP
+      port: 27017
+      targetPort: 27017
 ---
 apiVersion: batch/v1
 kind: Job
@@ -53,24 +68,28 @@ spec:
     spec:
       restartPolicy: OnFailure
       containers:
-      - name: mongo-init-container
-        image: mongo:5.0    # <-- Use mongo:5.0, which includes mongo shell
-        command:
-        - /bin/sh
-        - -c
-        - |
-          echo "Waiting for mongo-2 to be ready..."
-          until mongo --host mongo-2.mongo --eval "db.adminCommand('ping')" >/dev/null 2>&1; do
-            echo "MongoDB not ready yet... sleeping"
-            sleep 5
-          done
+        - name: mongo-init-container
+          image: mongo:5.0
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Waiting for all mongo pods to be ready..."
+              READY_COUNT=0
+              REPLICAS=$(kubectl get sts mongo -o jsonpath='{.spec.replicas}')
+              while [ "$READY_COUNT" -lt "$REPLICAS" ]; do
+                READY_COUNT=$(kubectl get po -l app=mongo -o jsonpath='{.items[*].status.conditions[?(@.type=="Ready")].status}' | grep -c "True")
+                echo "Ready pods: $READY_COUNT/$REPLICAS"
+                sleep 5
+              done
+              echo "All mongo pods are ready."
 
-          echo "Initializing replica set"
-          mongo --host mongo-0.mongo --eval 'rs.initiate({
-            _id: "rs0",
-            members: [
-              { _id: 0, host: "mongo-0.mongo:27017" },
-              { _id: 1, host: "mongo-1.mongo:27017" },
-              { _id: 2, host: "mongo-2.mongo:27017" }
-            ]
-          })'
+              echo "Initializing replica set"
+              mongo --host mongo-0.mongo --eval 'rs.initiate({
+                _id: "rs0",
+                members: [
+                  { _id: 0, host: "mongo-0.mongo:27017" },
+                  { _id: 1, host: "mongo-1.mongo:27017" },
+                  { _id: 2, host: "mongo-2.mongo:27017" }
+                ]
+              })'
