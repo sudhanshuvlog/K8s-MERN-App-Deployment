@@ -34,11 +34,12 @@ spec:
           volumeMounts:
             - name: mongo-persistent-storage
               mountPath: /data/db
-  volumeClaimTemplates:
+    volumeClaimTemplates:
     - metadata:
         name: mongo-persistent-storage
       spec:
         accessModes: ["ReadWriteOnce"]
+        storageClassName: "ebs-storage-class"
         resources:
           requests:
             storage: 1Gi
@@ -73,4 +74,3 @@ spec:
               { _id: 2, host: "mongo-2.mongo:27017" }
             ]
           })'
-
