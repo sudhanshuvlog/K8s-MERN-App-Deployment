@@ -1,57 +1,76 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: mongo-statefulset
-  labels:
-    app: mongo
-    env: prod
-    company: gfg
-    author: sudhanshu
+  name: mongo
 spec:
-  serviceName: "mongo"
-  replicas: 1
+  serviceName: mongo
+  replicas: 3
   selector:
     matchLabels:
       app: mongo
   template:
     metadata:
-      name: mongodb
       labels:
         app: mongo
     spec:
       containers:
-      - name: mongo-db
-        image: mongo:5.0
-        ports:
-        - containerPort: 27017
-        volumeMounts:
-        - mountPath: /data/db
-          name: mongo-persistent-storage
-        env:
-          - name: MONGO_INITDB_ROOT_USERNAME
-            valueFrom:
-              secretKeyRef:
-                name: mongo-secret
-                key: mongo-user
-          - name: MONGO_INITDB_ROOT_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: mongo-secret
-                key: mongo-password
+        - name: mongo
+          image: mongo:5.0
+          command:
+            - mongod
+            - "--replSet"
+            - rs0
+            - "--bind_ip_all"
+          ports:
+            - containerPort: 27017
+          readinessProbe:
+            exec:
+              command:
+                - mongosh
+                - --eval
+                - db.adminCommand('ping')
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          volumeMounts:
+            - name: mongo-persistent-storage
+              mountPath: /data/db
+  volumeClaimTemplates:
+    - metadata:
+        name: mongo-persistent-storage
+      spec:
+        accessModes: ["ReadWriteOnce"]
         resources:
           requests:
-            memory: "1Gi"
-            cpu: "1"
-          limits:
-            memory: "2Gi"
-            cpu: "2"
-  volumeClaimTemplates:
-  - metadata:
-      name: mongo-persistent-storage
+            storage: 1Gi
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mongo-init
+spec:
+  template:
     spec:
-      accessModes: [ "ReadWriteOnce" ]
-      storageClassName: "ebs-storage-class"
-      resources:
-        requests:
-          storage: 10Gi
+      restartPolicy: OnFailure
+      containers:
+      - name: mongo-init-container
+        image: mongo:5.0    # <-- Use mongo:5.0, which includes mongo shell
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "Waiting for mongo-2 to be ready..."
+          until mongo --host mongo-2.mongo --eval "db.adminCommand('ping')" >/dev/null 2>&1; do
+            echo "MongoDB not ready yet... sleeping"
+            sleep 5
+          done
+
+          echo "Initializing replica set"
+          mongo --host mongo-0.mongo --eval 'rs.initiate({
+            _id: "rs0",
+            members: [
+              { _id: 0, host: "mongo-0.mongo:27017" },
+              { _id: 1, host: "mongo-1.mongo:27017" },
+              { _id: 2, host: "mongo-2.mongo:27017" }
+            ]
+          })'
 
