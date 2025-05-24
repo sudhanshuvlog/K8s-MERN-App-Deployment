@@ -39,7 +39,7 @@ spec:
         name: mongo-persistent-storage
       spec:
         accessModes: ["ReadWriteOnce"]
-        storageClassName: "ebs-storage-class"
+        storageClassName: "ebs-storage-class" # Keep your storage class if it's defined
         resources:
           requests:
             storage: 1Gi
@@ -51,7 +51,7 @@ metadata:
   labels:
     app: mongo
 spec:
-  clusterIP: None
+  clusterIP: None # Headless service for StatefulSet
   selector:
     app: mongo
   ports:
@@ -74,28 +74,31 @@ spec:
             - /bin/sh
             - -c
             - |
-              echo "Waiting for all mongo pods to be running and have IPs..."
-              REPLICAS=$(kubectl get sts mongo -o jsonpath='{.spec.replicas}')
-              READY_COUNT=0
-              while [ "$READY_COUNT" -lt "$REPLICAS" ]; do
-                READY_COUNT=$(kubectl get po -l app=mongo -o jsonpath='{.items[*].status.phase}' | grep -cw "Running")
-                POD_IPS=$(kubectl get po -l app=mongo -o jsonpath='{.items[*].status.podIP}' | tr ' ' '\n' | grep -v '<none>')
-                EXPECTED_IPS=$(echo "$POD_IPS" | wc -l)
-                if [ "$READY_COUNT" -eq "$REPLICAS" ] && [ "$EXPECTED_IPS" -eq "$REPLICAS" ]; then
-                  ALL_READY=true
-                else
-                  ALL_READY=false
-                fi
+              set -o errexit
+              echo "Waiting for all MongoDB instances to be ready..."
 
-                echo "Running pods: $READY_COUNT/$REPLICAS, IPs assigned: $EXPECTED_IPS/$REPLICAS"
-                if "$ALL_READY"; then
-                  break
-                fi
+              # Wait for mongo-0 to be ready by pinging it
+              until mongosh --host mongo-0.mongo --eval "db.adminCommand('ping')" >/dev/null 2>&1; do
+                echo "Waiting for mongo-0 to be reachable..."
                 sleep 5
               done
-              echo "All mongo pods are running and have IPs."
-              sleep 10 # Add a short sleep here to help with DNS propagation if needed
-              echo "Initializing replica set"
+              echo "mongo-0 is reachable."
+
+              # Wait for mongo-1 to be ready by pinging it
+              until mongosh --host mongo-1.mongo --eval "db.adminCommand('ping')" >/dev/null 2>&1; do
+                echo "Waiting for mongo-1 to be reachable..."
+                sleep 5
+              done
+              echo "mongo-1 is reachable."
+
+              # Wait for mongo-2 to be ready by pinging it
+              until mongosh --host mongo-2.mongo --eval "db.adminCommand('ping')" >/dev/null 2>&1; do
+                echo "Waiting for mongo-2 to be reachable..."
+                sleep 5
+              done
+              echo "mongo-2 is reachable."
+
+              echo "All MongoDB instances are reachable. Initializing replica set..."
               mongo --host mongo-0.mongo --eval 'rs.initiate({
                 _id: "rs0",
                 members: [
@@ -104,3 +107,17 @@ spec:
                   { _id: 2, host: "mongo-2.mongo:27017" }
                 ]
               })'
+
+              echo "Replica set initialized. Adding other members (if not already added by initiate)."
+              # These rs.add commands are idempotent, so running them again won't hurt if initiate already added them.
+              # They specifically help if the initial initiate somehow missed adding a member.
+              mongo --host mongo-0.mongo --eval 'try { rs.add("mongo-1.mongo:27017") } catch (e) { print(e); }'
+              mongo --host mongo-0.mongo --eval 'try { rs.add("mongo-2.mongo:27017") } catch (e) { print(e); }'
+
+              echo "Checking replica set status for full readiness..."
+              # Wait for all members to be in a healthy state (PRIMARY, SECONDARY)
+              until mongo --host mongo-0.mongo --eval "rs.status().members.length == 3 && rs.status().members.every(m => m.stateStr === 'PRIMARY' || m.stateStr === 'SECONDARY')" >/dev/null 2>&1; do
+                echo "Replica set not fully ready yet... sleeping"
+                sleep 5
+              done
+              echo "Replica set configuration complete and all members are healthy."
