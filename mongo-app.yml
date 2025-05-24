@@ -51,7 +51,7 @@ metadata:
   labels:
     app: mongo
 spec:
-  clusterIP: None # Headless service for StatefulSet
+  clusterIP: None
   selector:
     app: mongo
   ports:
@@ -74,16 +74,27 @@ spec:
             - /bin/sh
             - -c
             - |
-              echo "Waiting for all mongo pods to be ready..."
-              READY_COUNT=0
+              echo "Waiting for all mongo pods to be running and have IPs..."
               REPLICAS=$(kubectl get sts mongo -o jsonpath='{.spec.replicas}')
+              READY_COUNT=0
               while [ "$READY_COUNT" -lt "$REPLICAS" ]; do
-                READY_COUNT=$(kubectl get po -l app=mongo -o jsonpath='{.items[*].status.conditions[?(@.type=="Ready")].status}' | grep -c "True")
-                echo "Ready pods: $READY_COUNT/$REPLICAS"
+                READY_COUNT=$(kubectl get po -l app=mongo -o jsonpath='{.items[*].status.phase}' | grep -cw "Running")
+                POD_IPS=$(kubectl get po -l app=mongo -o jsonpath='{.items[*].status.podIP}' | tr ' ' '\n' | grep -v '<none>')
+                EXPECTED_IPS=$(echo "$POD_IPS" | wc -l)
+                if [ "$READY_COUNT" -eq "$REPLICAS" ] && [ "$EXPECTED_IPS" -eq "$REPLICAS" ]; then
+                  ALL_READY=true
+                else
+                  ALL_READY=false
+                fi
+
+                echo "Running pods: $READY_COUNT/$REPLICAS, IPs assigned: $EXPECTED_IPS/$REPLICAS"
+                if "$ALL_READY"; then
+                  break
+                fi
                 sleep 5
               done
-              echo "All mongo pods are ready."
-
+              echo "All mongo pods are running and have IPs."
+              sleep 10 # Add a short sleep here to help with DNS propagation if needed
               echo "Initializing replica set"
               mongo --host mongo-0.mongo --eval 'rs.initiate({
                 _id: "rs0",
