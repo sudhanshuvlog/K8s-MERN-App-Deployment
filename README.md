@@ -125,8 +125,8 @@ To deploy your MERN (MongoDB, Express.js, React.js, Node.js) application in  Kub
 `kubectl apply -f storageclass.yml`
 ### Create the MongoDB Statefulset
 `kubectl apply -f mongo-app.yml`
-### Expose MongoDB Service on ClusterIP (Internal Cluster Access Only)
-`kubectl apply -f mongo-service.yml`
+### Create MongoDB DB-Admin user
+`kubectl apply -f create-db-user-job.yaml`
 ### Create ConfigMap for MongoDB URL, Pointing to the MongoDB Service
 `kubectl apply -f mongo-config.yml`
 ### Create the mongo-express Deployment with ReplicaSet, It uses the secrets and ConfigMap created above
