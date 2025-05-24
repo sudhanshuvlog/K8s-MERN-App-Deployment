@@ -120,19 +120,19 @@ To deploy your MERN (MongoDB, Express.js, React.js, Node.js) application in  Kub
 ### Step 11: Deploy MongoDB and MERN Web App
 
 ### Create Kubernetes Secret for MongoDB Credentials
-`kubectl create -f secret.yml` 
+`kubectl apply -f secret.yml` 
 ### Create Storageclass for EBS PV Provisioning
 `kubectl apply -f storageclass.yml`
 ### Create the MongoDB Statefulset
-`kubectl create -f mongo-app.yml`
+`kubectl apply -f mongo-app.yml`
 ### Expose MongoDB Service on ClusterIP (Internal Cluster Access Only)
-`kubectl create -f mongo-service.yml`
+`kubectl apply -f mongo-service.yml`
 ### Create ConfigMap for MongoDB URL, Pointing to the MongoDB Service
-`kubectl create -f mongo-config.yml`
+`kubectl apply -f mongo-config.yml`
 ### Create the mongo-express Deployment with ReplicaSet, It uses the secrets and ConfigMap created above
-`kubectl create -f mongo-express-webapp.yml`
+`kubectl apply -f mongo-express-webapp.yml`
 ### Expose Webapp Service With LoadBalancer
-`kubectl create -f webapp-service.yml`
+`kubectl apply -f webapp-service.yml`
 
 * Our Mongo-Express web app, built using Express, Node.js and MongoDB, is now accessible by AWS ALB, You can get the Loadbalancer DNS and hit to the website `kubectl get svc`
 
