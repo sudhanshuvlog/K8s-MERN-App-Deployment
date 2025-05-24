@@ -1,0 +1,42 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mongo-create-user
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: mongo-create-user
+          image: mongo:5.0
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key: mongo-user
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key: mongo-password
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Waiting for primary mongo pod to be ready..."
+              until mongosh --host mongo-0.mongo --eval "db.adminCommand('ping')" >/dev/null 2>&1; do
+                echo "Waiting for mongo-0 to be reachable..."
+                sleep 5
+              done
+
+              echo "Primary pod reachable. Checking if user exists..."
+              USER_EXISTS=$(mongosh --host mongo-0.mongo --eval "db.getSiblingDB('admin').getUser('$MONGO_INITDB_ROOT_USERNAME')" --quiet)
+
+              if [ "$USER_EXISTS" = "null" ]; then
+                echo "User does not exist. Creating admin user..."
+                mongosh --host mongo-0.mongo --eval "db.getSiblingDB('admin').createUser({user: '$MONGO_INITDB_ROOT_USERNAME', pwd: '$MONGO_INITDB_ROOT_PASSWORD', roles: [{ role: 'root', db: 'admin' }]})"
+                echo "Admin user created."
+              else
+                echo "User already exists. Skipping creation."
+              fi
