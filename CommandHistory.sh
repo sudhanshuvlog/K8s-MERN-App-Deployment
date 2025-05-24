@@ -20,50 +20,65 @@
    19  kubectl -n kube-system describe configmap aws-auth
    20  kubectl apply -k "github.com/kubernetes-sigs/aws-ebs-csi-driver/deploy/kubernetes/overlays/stable/ecr/?ref=release-1.4"
    21  ls
-   22  cd K8s-MERN-App-Deployment/
-   23  ls
-   24  kubectl apply -f secret.yml 
-   25  kubectl get secret
-   26  kubectl apply -f storageclass.yml 
-   27  kubectl get storageclass
-   28  kubectl apply -f mongo-app.yml 
-   29  kubectl get statefulset
-   30  kubectl get pod
-   31  kubectl get pod
-   32  kubectl get pvc
-   33  kubectl get pv
-   34  kubectl get pod
-   35  kubectl describe pod mongo-statefulset-0
-   36  kubectl get nodes
+    4  mkdir gfg33
+    5  cd gfg33
+    6  clear
+    7  git clone https://github.com/sudhanshuvlog/K8s-MERN-App-Deployment.git
+    8  ls
+    9  cd K8s-MERN-App-Deployment/
+   10  ls
+   11  kubectl apply -f secret.yml 
+   12  kubectl apply -f mongo-app.yml 
+   13  kubectl get pods
+   14  kubectl logs jobs/mongo-init
+   15  kubectl get pods
+   16  kubectl describe pod mongo-0
+   17  kubectl get pv
+   18  kubectl get pvc
+   19  cat storageclass.yml 
+   20  kubectl apply -f storageclass.yml 
+   21  kubectl get storageclass
+   22  kubectl get pvc
+   23  kubectl get pv
+   24  kubectl get pods
+   25  kubectl logs jobs/mongo-init
+   26  kubectl get pods
+   27  kubectl get jobs
+   28  kubectl get pv
+   29  kubectl get pvc
+   30  kubectl get pods
+   31  kubectl delete pod mongo-0
+   32  kubectl get pods
+   33  kubectl get pods
+   34  kubectl get pods
+   35  kubectl get pods
+   36  kubectl logs jobs/mongo-init
    37  kubectl get pods
-   38  kubectl get pods
-   39  kubectl delete pod mongo-statefulset-0
+   38  kubectl exec -it mongo-0 --mongosh
+   39  kubectl exec -it mongo-0 -- mongosh
    40  kubectl get pods
-   41  kubectl get pods
-   42  kubectl scale statefulset mongo-statefulset --replicas=2
-   43  kubectl get pods
-   44  kubectl get pvc
-   45  kubectl get pv
+   41  kubectl get svc
+   42  kubectl apply -f mongo-config.yml 
+   43  kubectl get configmap
+   44  kubectl apply -f mongo-express-webapp.yml
+   45  kubectl get pods
    46  kubectl get pods
-   47  kubectl apply -f mongo-service.yml 
-   48  kubectl get svc
-   49  kubectl apply -f mongo-config.yml 
-   50  kubectl get configmap
-   51  kubectl apply -f mongo-express-webapp.yml 
-   52  kubectl get pod
-   53  kubectl apply -f webapp-service.yml 
-   54  kubectl scale statefulset mongo-statefulset --replicas=1
-   55  kubectl get pod
-   56  kubectl scale deployment webapp-deployment  --replicas=5
-   57  kubectl get pod
-   58  kubectl get pod
-   59  kubectl get pod
-   60  kubectl scale deployment webapp-deployment  --replicas=3
-   61  kubectl get pod
-   62  kubectl get svc
-   63  kubectl scale statefulset mongo-statefulset --replicas=2
-   64  kubectl get svc
-   65  kubectl get pods
-   66  kubectl get pv
-   67  kubectl get pods
-   68  history
+   47  kubectl logs webapp-deployment-69b6bb6b79-x7dl5
+   48  kubectl run -it pod1 --image=amazonlinux -- bash
+   49  kubectl get pod
+   50  kubectl get statefulset
+   51  kubectl describe pod mongo-0
+   52  kubectl get pods
+   53  kubectl describe pod webapp-deployment-69b6bb6b79-x7dl5
+   54  kubectl get pods
+   55  kubectl exec -it pod -- bash
+   56  kubectl exec -it pod1 -- bash
+   57  kubectl run -it pod1 --image=mongo:5 -- bash
+   58  kubectl run -it pod2 --image=mongo:5 -- bash
+   59  kubectl get pv
+   60  kubectl get pods
+   61  kubectl scale statefulset --replicas 4
+   62  kubectl scale statefulset mongo --replicas 4
+   63  kubectl get pods
+   64  kubectl get pv
+   65  history
