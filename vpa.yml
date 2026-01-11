@@ -6,7 +6,7 @@ spec:
   targetRef:
     apiVersion: apps/v1
     kind: StatefulSet
-    name: mongo-statefulset
+    name: mongo
   updatePolicy:
     updateMode: "Auto"
 

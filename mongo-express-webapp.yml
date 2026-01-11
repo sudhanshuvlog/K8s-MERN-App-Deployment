@@ -17,6 +17,13 @@ spec:
       containers:
       - name: webapp
         image: mongo-express
+        resources:
+          requests:
+            memory: 10
+            cpu: 10m
+          limits:
+            memory: 20
+            cpu: 20m
         ports:
           - containerPort: 8081
         env:
