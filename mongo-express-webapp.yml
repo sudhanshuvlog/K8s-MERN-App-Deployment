@@ -19,11 +19,11 @@ spec:
         image: mongo-express
         resources:
           requests:
-            memory: 10
-            cpu: 10m
+            memory: "100Mi"
+            cpu: 150m
           limits:
-            memory: 20
-            cpu: 20m
+            memory: "200Mi"
+            cpu: 300m
         ports:
           - containerPort: 8081
         env:
@@ -43,4 +43,4 @@ spec:
               name: mongo-config
               key: mongo-url 
         - name: ME_CONFIG_MONGODB_PORT
-          value: "27017"  
+          value: "27017"

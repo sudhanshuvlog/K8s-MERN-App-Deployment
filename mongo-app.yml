@@ -23,11 +23,11 @@ spec:
             - "--bind_ip_all"
           resources:
             requests:
-              memory: 100
-              cpu: 100m
+              memory: "300Mi"
+              cpu: 500m
             limits:
-              memory: 150
-              cpu: 160m
+              memory: "500Mi"
+              cpu: 600m
           ports:
             - containerPort: 27017
           env:

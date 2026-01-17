@@ -1,4 +1,4 @@
-apiVersion: autoscaling.k8s.io/v1beta2
+apiVersion: autoscaling.k8s.io/v1
 kind: VerticalPodAutoscaler
 metadata:
   name: mongo-statefulset-vpa
@@ -8,5 +8,4 @@ spec:
     kind: StatefulSet
     name: mongo
   updatePolicy:
-    updateMode: "Auto"
-
+    updateMode: "Recreate"
