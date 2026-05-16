@@ -136,6 +136,12 @@ To deploy your MERN (MongoDB, Express.js, React.js, Node.js) application in  Kub
 
 * Our Mongo-Express web app, built using Express, Node.js and MongoDB, is now accessible by AWS ALB, You can get the Loadbalancer DNS and hit to the website `kubectl get svc`
 
+### Setup VPA
+`git clone https://github.com/kubernetes/autoscaler.git`
+`cd autoscaler/vertical-pod-autoscaler/hack/`
+`./vpa-up.sh` 
+`kubectl apply -f vpa.yaml`
+
 
 ## Mern Application on Kubernetes
 
