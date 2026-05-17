@@ -127,14 +127,20 @@ To deploy your MERN (MongoDB, Express.js, React.js, Node.js) application in  Kub
 `kubectl apply -f mongo-app.yml`
 ### Create MongoDB DB-Admin user
 `kubectl apply -f create-db-user-job.yaml`
-### Create ConfigMap for MongoDB URL, Pointing to the MongoDB Service
-`kubectl apply -f mongo-config.yml`
+### Create Secret for MongoDB URL, Pointing to the MongoDB Replicaset
+`Add this in secret - mongo-url:mongodb://admin:redhat@mongo-0.mongo:27017,mongo-1.mongo:27017,mongo-2.mongo:27017/admin?replicaSet=rs0`
 ### Create the mongo-express Deployment with ReplicaSet, It uses the secrets and ConfigMap created above
 `kubectl apply -f mongo-express-webapp.yml`
 ### Expose Webapp Service With LoadBalancer
 `kubectl apply -f webapp-service.yml`
 
 * Our Mongo-Express web app, built using Express, Node.js and MongoDB, is now accessible by AWS ALB, You can get the Loadbalancer DNS and hit to the website `kubectl get svc`
+
+### Setup VPA
+`git clone https://github.com/kubernetes/autoscaler.git`
+`cd autoscaler/vertical-pod-autoscaler/hack/`
+`./vpa-up.sh` 
+`kubectl apply -f vpa.yaml`
 
 
 ## Mern Application on Kubernetes
