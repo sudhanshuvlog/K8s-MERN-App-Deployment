@@ -128,7 +128,7 @@ To deploy your MERN (MongoDB, Express.js, React.js, Node.js) application in  Kub
 ### Create MongoDB DB-Admin user
 `kubectl apply -f create-db-user-job.yaml`
 ### Create Secret for MongoDB URL, Pointing to the MongoDB Replicaset
-`Add this in secret - mongo-url:mongodb://admin:redhat@mongo-0.mongo:27017,mongo-1.mongo:27017,mongo-2.mongo:27017/admin?replicaSet=rs0`
+Add this in secret - `mongo-url:mongodb://admin:redhat@mongo-0.mongo:27017,mongo-1.mongo:27017,mongo-2.mongo:27017/admin?replicaSet=rs0` or `mongodb://admin:redhat@mongo-0.mongo:27017,mongo-1.mongo:27017,mongo-2.mongo:27017/admin?replicaSet=rs0&readPreference=secondary`
 ### Create the mongo-express Deployment with ReplicaSet, It uses the secrets and ConfigMap created above
 `kubectl apply -f mongo-express-webapp.yml`
 ### Expose Webapp Service With LoadBalancer

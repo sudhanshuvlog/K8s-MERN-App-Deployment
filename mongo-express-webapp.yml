@@ -19,7 +19,7 @@ spec:
         image: mongo-express
         resources:
           requests:
-            memory: "100Mi"
+            memory: "60Mi"
             cpu: 150m
           limits:
             memory: "200Mi"

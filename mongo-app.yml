@@ -42,14 +42,6 @@ spec:
               secretKeyRef:
                 name: mongo-secret
                 key: mongo-password
-          readinessProbe:
-            exec:
-              command:
-                - mongosh
-                - --eval
-                - db.adminCommand('ping')
-            initialDelaySeconds: 10
-            periodSeconds: 10
           volumeMounts:
             - name: mongo-persistent-storage
               mountPath: /data/db
